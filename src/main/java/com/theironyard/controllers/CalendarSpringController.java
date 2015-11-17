@@ -6,9 +6,12 @@ import com.theironyard.services.EventRepository;
 import com.theironyard.services.UserRepository;
 import com.theironyard.util.PasswordHash;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
@@ -46,14 +49,25 @@ public class CalendarSpringController {
     }
 
     @RequestMapping("/")
-    public String home(HttpSession session, Model model) {
+    public String home(HttpSession session, Model model, @RequestParam(defaultValue = "0") int page) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
             return "login";
         }
 
-        model.addAttribute("user", users.findOneByUsername(username));
+        PageRequest pr = new PageRequest(page, 5);
+
+        User user = users.findOneByUsername(username);
+        Page<Event> pagedEvents = events.findByUser(pr, user);
+
+        model.addAttribute("user", user);
         model.addAttribute("now", LocalDateTime.now());
+        model.addAttribute("pagedEvents", pagedEvents); //pr tells it how to page and the user is the user
+        model.addAttribute("nextPage", page+1); //shows the next button
+        model.addAttribute("showNext", pagedEvents.hasNext()); //tells it whether or not to show the next button, only if there are more values to show
+        model.addAttribute("prevPage", page-1); //shows the previous button
+        model.addAttribute("showPrev", pagedEvents.hasPrevious()); //tell it whether or not to show the previous button
+
 
         return "home";
     }

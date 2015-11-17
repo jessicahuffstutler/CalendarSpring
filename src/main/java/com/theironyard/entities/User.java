@@ -20,6 +20,7 @@ public class User {
     @Column(nullable = false)
     public String password;
 
+    //this cannot be paged, so we have to make some changes to the controller and mustache
     @OneToMany(mappedBy = "user")
     List<Event> events;
 
